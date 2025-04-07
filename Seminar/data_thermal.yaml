@@ -1,0 +1,6 @@
+# data.yaml
+test: /Users/lukamelinc/Desktop/Faks/NMRV/Seminar/NMRV_seminar/thermal_images/test
+train: /Users/lukamelinc/Desktop/Faks/NMRV/Seminar/NMRV_seminar/thermal_images/train
+
+nc: 1
+names:['object']
