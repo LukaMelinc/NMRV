@@ -7,8 +7,8 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, Dataset
 import albumentations as A
 import segmentation_models_pytorch as smp
-
 from network import UNet
+from PIL import Image
 
 
 class SegmentationDataset(Dataset):
@@ -36,14 +36,15 @@ class SegmentationDataset(Dataset):
         return image, mask
     
 # Data augmentations
-transform = A.compose([
-    A.resize(640, 640),
+transform = A.Compose([
+    A.Resize(640, 640),
     A.HorizontalFlip(p=0.5),
     A.VerticalFlip(p=0.5),
     A.Rotate(limit=35, p=0.5),
     A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-    A.ToTenzor()
+    A.ToTensorV2()
 ])
+
 
 
 train_dataset = SegmentationDataset(
@@ -70,14 +71,15 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 model.to(device)
 
 
+
 num_epochs = 30
+best_val_loss = float('inf')
 
-
-for epoch in num_epochs:
+for epoch in range(num_epochs):
     model.train()
     epoch_loss = 0
 
-    for images, mask in train_loader:
+    for images, masks in train_loader:
         images = images.to(device)
         masks = masks.to(device)
 
@@ -87,8 +89,10 @@ for epoch in num_epochs:
         loss.backward()
         optimizer.step()
         epoch_loss += loss.item()
+
     epoch_loss /= len(train_loader)
     print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {epoch_loss:.4f}')
+
     # Validation
     model.eval()
     val_loss = 0
@@ -97,12 +101,15 @@ for epoch in num_epochs:
             images = images.to(device)
             masks = masks.to(device)
 
-            output = model(images)
+            outputs = model(images)
             loss = loss_fn(outputs, masks)
             val_loss += loss.item()
+
     val_loss /= len(val_loader)
     print(f'Validation Loss: {val_loss:.4f}')
-    # Save the model
-    torch.save(model.state_dict(), f'UNet_epoch_{epoch+1}.pth')
-    print(f'Model saved as UNet_epoch_{epoch+1}.pth')
-    
+
+    # Save the model if the validation loss improves
+    if val_loss < best_val_loss:
+        best_val_loss = val_loss
+        torch.save(model.state_dict(), f'UNet_best.pth')
+        print(f'Model saved as UNet_best.pth')

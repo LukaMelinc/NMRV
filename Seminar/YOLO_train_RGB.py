@@ -7,9 +7,9 @@ print("loading YOLOv11 done")
 # Set the model to training mode
 model.trainable = True
 
-for name, param in model.model.named_parameters():
+"""for name, param in model.model.named_parameters():
     if 'head' not in name:
-        param.requries_grad = False
+        param.requries_grad = False"""
 
 print("training model")
 

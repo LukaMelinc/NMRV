@@ -13,7 +13,7 @@ def get_image_size(image_path):
 
 def main():
     # Path to the image file
-    image_path = '/Users/lukamelinc/Desktop/Faks/NMRV/Seminar/NMRV_seminar/RGB_images/test/lj3_0_069051.png'
+    image_path = '/Users/lukamelinc/Desktop/Faks/NMRV/Seminar/NMRV_seminar/RGB_images/test/test_images/lj3_0_064851.png'
 
     # Get the image size
     width, height, file_size = get_image_size(image_path)
