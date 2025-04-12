@@ -1,8 +1,10 @@
-# data.yaml
-test: /Users/lukamelinc/Desktop/Faks/NMRV/Seminar/NMRV_seminar/RGB_images/test
-train: /Users/lukamelinc/Desktop/Faks/NMRV/Seminar/NMRV_seminar/RGB_images/train
+# data_RGB.yaml
+train: /content/drive/MyDrive/RGB_images_val/train
+val: /content/drive/MyDrive/RGB_images_val/val
+test: /content/drive/MyDrive/RGB_images_val/test
 
 nc: 1
-names:['object']
+names: ['object']
+
 
 

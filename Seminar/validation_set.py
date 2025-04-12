@@ -1,54 +1,74 @@
 import os
-import shutil
 import random
-from sklearn.model_selection import train_test_split
+import shutil
+import argparse
 
-def create_directory(directory):
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+def get_pairs(images_dir, annotations_dir, image_exts={'.jpg', '.jpeg', '.png'}):
+    """
+    Find image files in images_dir and return a list of (image_path, annotation_path) pairs.
+    Assumes that the annotation filename (with any extension) matches the image basename.
+    """
+    pairs = []
+    # Create a lookup for annotations by name (without extension)
+    annotation_lookup = {}
+    for file in os.listdir(annotations_dir):
+        name, ext = os.path.splitext(file)
+        annotation_lookup[name] = os.path.join(annotations_dir, file)
 
-def split_dataset(image_dir, annotation_dir, train_image_dir, val_image_dir, train_annotation_dir, val_annotation_dir, val_split=0.2):
-    # Get the list of all images
-    images = [f for f in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, f))]
+    # Process images that have a valid extension
+    for file in os.listdir(images_dir):
+        name, ext = os.path.splitext(file)
+        if ext.lower() in image_exts:
+            image_file = os.path.join(images_dir, file)
+            annotation_file = annotation_lookup.get(name)
+            if annotation_file is not None:
+                pairs.append((image_file, annotation_file))
+            else:
+                print(f"Warning: No annotation found for image {file}")
+    return pairs
 
-    # Split the dataset into training and validation sets
-    train_images, val_images = train_test_split(images, test_size=val_split, random_state=42)
+def copy_files(pairs, dest_images_dir, dest_annotations_dir):
+    os.makedirs(dest_images_dir, exist_ok=True)
+    os.makedirs(dest_annotations_dir, exist_ok=True)
+    for image_path, annotation_path in pairs:
+        shutil.copy2(image_path, dest_images_dir)
+        shutil.copy2(annotation_path, dest_annotations_dir)
 
-    # Create directories for training and validation sets
-    create_directory(train_image_dir)
-    create_directory(val_image_dir)
-    create_directory(train_annotation_dir)
-    create_directory(val_annotation_dir)
+def main(args):
+    random.seed(args.seed)
 
-    # Move images and annotations to the appropriate directories
-    for image in train_images:
-        src_image_path = os.path.join(image_dir, image)
-        dest_image_path = os.path.join(train_image_dir, image)
-        shutil.move(src_image_path, dest_image_path)
+    # Get all pairs
+    pairs = get_pairs(args.images_dir, args.annotations_dir)
+    if not pairs:
+        print("No matching image/annotation pairs found. Exiting.")
+        return
 
-        src_annotation_path = os.path.join(annotation_dir, image.replace('.jpg', '.txt'))
-        dest_annotation_path = os.path.join(train_annotation_dir, image.replace('.jpg', '.txt'))
-        if os.path.exists(src_annotation_path):
-            shutil.move(src_annotation_path, dest_annotation_path)
+    random.shuffle(pairs)
+    split_idx = int(len(pairs) * args.train_ratio)
+    train_pairs = pairs[:split_idx]
+    val_pairs = pairs[split_idx:]
 
-    for image in val_images:
-        src_image_path = os.path.join(image_dir, image)
-        dest_image_path = os.path.join(val_image_dir, image)
-        shutil.move(src_image_path, dest_image_path)
+    # Create destination directories and copy files
+    print(f"Found {len(pairs)} pairs. {len(train_pairs)} for training, {len(val_pairs)} for validation.")
+    
+    # Training split directories
+    train_images_dir = os.path.join(args.out_dir, "train", "images")
+    train_annotations_dir = os.path.join(args.out_dir, "train", "annotations")
+    copy_files(train_pairs, train_images_dir, train_annotations_dir)
+    
+    # Validation split directories
+    val_images_dir = os.path.join(args.out_dir, "val", "images")
+    val_annotations_dir = os.path.join(args.out_dir, "val", "annotations")
+    copy_files(val_pairs, val_images_dir, val_annotations_dir)
+    
+    print("Dataset split completed successfully.")
 
-        src_annotation_path = os.path.join(annotation_dir, image.replace('.jpg', '.txt'))
-        dest_annotation_path = os.path.join(val_annotation_dir, image.replace('.jpg', '.txt'))
-        if os.path.exists(src_annotation_path):
-            shutil.move(src_annotation_path, dest_annotation_path)
-
-    print(f"Dataset split complete. {len(train_images)} training images and {len(val_images)} validation images.")
-
-# Example usage
-image_dir = '/content/NMRV/Seminar/RGB_images/train'
-annotation_dir = '/content/NMRV/Seminar/RGB_annotations/train'
-train_image_dir = '/content/NMRV/Seminar/RGB_images/train'
-val_image_dir = '/content/NMRV/Seminar/RGB_images/val'
-train_annotation_dir = '/content/NMRV/Seminar/RGB_annotations/train'
-val_annotation_dir = '/content/NMRV/Seminar/RGB_annotations/val'
-
-split_dataset(image_dir, annotation_dir, train_image_dir, val_image_dir, train_annotation_dir, val_annotation_dir, val_split=0.2)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Split training images and annotations into training and validation sets.")
+    parser.add_argument("--images_dir", type=str, required=True, help="Directory containing training images.")
+    parser.add_argument("--annotations_dir", type=str, required=True, help="Directory containing training annotations.")
+    parser.add_argument("--out_dir", type=str, required=True, help="Output directory to store the split dataset.")
+    parser.add_argument("--train_ratio", type=float, default=0.8, help="Ratio of images to use for training (default: 0.8).")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed for shuffling (default: 42).")
+    args = parser.parse_args()
+    main(args)
