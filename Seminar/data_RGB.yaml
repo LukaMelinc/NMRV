@@ -1,7 +1,7 @@
 # data_RGB.yaml
-train: /content/drive/MyDrive/RGB_images_val/train
-val: /content/drive/MyDrive/RGB_images_val/val
-test: /content/drive/MyDrive/RGB_images_val/test
+train: /content/drive/MyDrive/RGB_detection_dataset/train
+val: /content/drive/MyDrive/RGB_detection_dataset/val
+test: /content/drive/MyDrive/RGB_detection_dataset/test
 
 nc: 1
 names: ['object']
