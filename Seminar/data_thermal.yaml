@@ -1,7 +1,7 @@
 # data_thermal.yaml
-test: /content/drive/MyDrive/Thermal_Detection_dataset_V2/test
-train: /content/drive/MyDrive/Thermal_Detection_dataset_V2/train
-val: /content/drive/MyDrive/Thermal_Detection_dataset_V2/val
+test: /content/drive/MyDrive/Thermal_Detection_dataset_V4/test
+train: /content/drive/MyDrive/Thermal_Detection_dataset_V4/train
+val: /content/drive/MyDrive/Thermal_Detection_dataset_V4/val
 
 nc: 1
 names: ['object']
